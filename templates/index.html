@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Pose Detection WebApp</title>
+</head>
+<body>
+    <h2>姿勢認識デモ</h2>
+    <div>
+        <h3>1. インカメラで画像認識</h3>
+        <button id="start_btn" onclick="startCamera()">開始</button>
+        <button id="stop_btn" onclick="stopCamera()" disabled>終了</button>
+        <br>
+        <img id="camera_img" width="480" />
+    </div>
+    <script>
+        let streaming = false;  
+        function startCamera() {
+            var ts = new Date().getTime();
+            document.getElementById('camera_img').src = '/camera?ts=' + ts;
+            streaming = true;
+            document.getElementById('start_btn').disabled = true;
+            document.getElementById('stop_btn').disabled = false;
+        }
+        function stopCamera() {
+            document.getElementById('camera_img').src = '';
+            streaming = false;
+            document.getElementById('start_btn').disabled = false;
+            document.getElementById('stop_btn').disabled = true;
+        }
+    </script>
+    <div>
+        <h3>2. 動画アップロードで画像認識</h3>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="video/*">
+            <input type="submit" value="アップロードして解析">
+        </form>
+    </div>
+</body>
+</html>
