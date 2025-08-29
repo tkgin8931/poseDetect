@@ -22,20 +22,28 @@ def detect_pose(frame):
     return keypoints
 
 def draw_keypoints(frame, keypoints):
+    import sys
     h, w, _ = frame.shape
     total_kp = 0
-    for person in keypoints[0]:
-        if not (isinstance(person, (np.ndarray, list, tuple)) and len(person) > 0):
-            continue
-        for kp in person:
-            if isinstance(kp, (np.ndarray, list, tuple)) and len(kp) == 3:
-                y, x, score = kp
-                if score > 0.1:
-                    cx = int(x * w)
-                    cy = int(y * h)
-                    cv2.circle(frame, (cx, cy), 4, (0,255,0), -1)
-                    total_kp += 1
+    print(f"keypoints shape: {keypoints.shape if hasattr(keypoints, 'shape') else type(keypoints)}")
+    # MoveNet MultiPose: keypoints.shape = (1, num_person, 56)
+    for person_idx, person in enumerate(keypoints[0]):
+        # 17 keypoints: each 3 values (y, x, score)
+        scores = []
+        for kp_idx in range(17):
+            y = person[kp_idx * 3]
+            x = person[kp_idx * 3 + 1]
+            score = person[kp_idx * 3 + 2]
+            scores.append(score)
+            if score > 0.2:
+                cx = int(x * w)
+                cy = int(y * h)
+                cv2.circle(frame, (cx, cy), 4, (0,255,0), -1)
+                total_kp += 1
+        print(f"person {person_idx} scores: {scores}")
+        sys.stdout.flush()
     print(f"Drawn keypoints: {total_kp}")
+    sys.stdout.flush()
     return frame
 
 @app.route('/')
@@ -83,6 +91,7 @@ def gen_video(filename):
         if not ret:
             break
         keypoints = detect_pose(frame)
+        print(f"keypoints output: {keypoints}") 
         frame = draw_keypoints(frame, keypoints)
         _, jpeg = cv2.imencode('.jpg', frame)
         yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
